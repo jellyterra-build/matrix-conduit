@@ -1,0 +1,30 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+      - name: Build
+        run: |
+          ./build.sh ${{ github.ref_name }}
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run:
+          gh release -R ${{ github.repository }} create -F README.md ${{ github.ref_name }} -t ${{ github.ref_name }} ~/build/SHA256SUMS.txt ~/build/*zst
